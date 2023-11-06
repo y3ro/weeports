@@ -67,3 +67,7 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 
 // TODO: fetch other "doing" issues
 // TODO: fetch "to do" issues
+
+func main() {
+	log.Fatal("Not implemented")
+}
