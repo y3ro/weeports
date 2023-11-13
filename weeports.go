@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"net/smtp"
 	"strings"
 	"time"
 
@@ -28,9 +29,14 @@ var (
 )
 
 type Config struct {
-	GitlabUrl   string
-	GitlabToken string
-	GitlabUsername string
+	GitlabUrl       string
+	GitlabToken     string
+	GitlabUsername  string
+	SMTPUsername	string
+	SMTPPassword	string
+	SMTPHost	string
+	SMTPPort	string
+	RecipientEmail	string
 }
 
 func getConfigDir() string {
@@ -46,9 +52,13 @@ func getConfigDir() string {
 
 func configFileHelp() string {
 	helpConfig := Config{
-		GitlabUrl:      "https://timetracking.domain.com",
-		GitlabToken:    "secret-token",
-		GitlabUsername: "username",
+		GitlabUrl:      "https://git.domain.com",
+		GitlabToken:    "gitlab-secret-token",
+		GitlabUsername: "gitlab-username",
+		SMTPUsername:   "email-username",
+		SMTPPassword:   "email-password",
+		SMTPHost:       "smtp.domain.com",
+		SMTPPort:       "584",
 	}
 
 	helpBytes, _ := json.MarshalIndent(helpConfig, "", "    ")
@@ -63,6 +73,7 @@ func openDefaultConfigFile() (*os.File, error) {
 		err        error
 	)
 
+	// TODO: remove this per-repo default option
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	out, err = cmd.Output()
 	if err == nil {
@@ -94,6 +105,21 @@ func checkConfigFields(config *Config) error {
 	}
 	if config.GitlabUsername == "" {
 		return errors.New("No GitLab username specified in the config file")
+	}
+	if config.SMTPUsername == "" {
+		log.Fatalln("No SMTP username specified in the config file")
+	}
+	if config.SMTPPassword == "" {
+		log.Fatalln("No SMTP password specified in the config file")
+	}
+	if config.SMTPHost == "" {
+		log.Fatalln("No SMTP host specified in the config file")
+	}
+	if config.SMTPPort == "" {
+		log.Fatalln("No SMTP port specified in the config file")
+	}
+	if config.RecipientEmail == "" {
+		log.Fatalln("No recipient email specified in the config file")
 	}
 
 	return nil
@@ -199,10 +225,10 @@ func formatIssues(issues []*gitlab.Issue) string {
 	var issuesStrs []string
 	for i := 0; i < len(issues); i++ {
 		issue := issues[i]
-		issueStr := "* [" + issue.Title + "](" + issue.WebURL + ")\n"
+		issueStr := "* [" + issue.Title + "](" + issue.WebURL + ")\r\n"
 		dueDate := issue.DueDate
 		if dueDate != nil {
-			issueStr += "\t* Due date: " + dueDate.String() + "\n"
+			issueStr += "\t* Due date: " + dueDate.String() + "\r\n"
 		}
 		issuesStrs = append(issuesStrs, issueStr)
 	}
@@ -212,18 +238,35 @@ func formatIssues(issues []*gitlab.Issue) string {
 
 func formatClosedLastWeekIssues() string {
 	issues := fetchClosedLastWeekIssues()
-	title := "#### Issues closed last week:\n"
+	title := "Issues closed last week:\r\n\r\n"
 	body := formatIssues(issues)
 
-	return title + body + "\n"
+	return title + body + "\r\n"
 }
 
 func formatToCloseThisWeekIssues() string {
 	issues := fetchToCloseThisWeekIssues()
-	title := "#### Issues to close this week:\n"
+	title := "Issues to close this week:\r\n\r\n"
 	body := formatIssues(issues)
 
-	return title + body + "\n"
+	return title + body + "\r\n"
+}
+
+func sendEmail(msgBody string) {
+	host := config.SMTPHost
+	toStr := config.RecipientEmail
+	to := []string{toStr}
+	now := time.Now().String()
+	message := []byte("To: " + toStr + "\r\n" +
+		"Subject: Weekly report (" + now + ")\r\n" +
+		"\r\n" + msgBody + "\r\n")
+
+	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, host)
+	err := smtp.SendMail(host + ":" + config.SMTPPort, auth, config.SMTPUsername, to, message)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Email sent: " + string(message))
 }
 
 func main() {
@@ -238,5 +281,5 @@ func main() {
 
 	closedLastWeekIssuesStr := formatClosedLastWeekIssues()
 	toCloseWeekIssuesStr := formatToCloseThisWeekIssues()
-	fmt.Print(closedLastWeekIssuesStr + toCloseWeekIssuesStr)
+	sendEmail(closedLastWeekIssuesStr + toCloseWeekIssuesStr)
 }
