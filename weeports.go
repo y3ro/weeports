@@ -189,8 +189,42 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 	return issues
 }
 
-// TODO: fetch other "doing" issues
-// TODO: fetch "to do" issues
+// TODO: fetch other "doing" issues (specify label in config)
+// TODO: fetch "to do" issues (same)
+
+// TODO: mention if there are MRs
+// TODO: distinguish between projects
+
+func formatIssues(issues []*gitlab.Issue) string {
+	var issuesStrs []string
+	for i := 0; i < len(issues); i++ {
+		issue := issues[i]
+		issueStr := "* [" + issue.Title + "](" + issue.WebURL + ")\n"
+		dueDate := issue.DueDate
+		if dueDate != nil {
+			issueStr += "\t* Due date: " + dueDate.String() + "\n"
+		}
+		issuesStrs = append(issuesStrs, issueStr)
+	}
+
+	return strings.Join(issuesStrs, "")
+}
+
+func formatClosedLastWeekIssues() string {
+	issues := fetchClosedLastWeekIssues()
+	title := "#### Issues closed last week:\n"
+	body := formatIssues(issues)
+
+	return title + body + "\n"
+}
+
+func formatToCloseThisWeekIssues() string {
+	issues := fetchToCloseThisWeekIssues()
+	title := "#### Issues to close this week:\n"
+	body := formatIssues(issues)
+
+	return title + body + "\n"
+}
 
 func main() {
 	configPathPtr := flag.String("config", "", "Path to the configuration file")
@@ -202,7 +236,7 @@ func main() {
 	}
 	setGitlabClient()
 
-	// TODO:
-	// issues := fetchClosedLastWeekIssues()
-	// fmt.Println(formatIssues(issues))
+	closedLastWeekIssuesStr := formatClosedLastWeekIssues()
+	toCloseWeekIssuesStr := formatToCloseThisWeekIssues()
+	fmt.Print(closedLastWeekIssuesStr + toCloseWeekIssuesStr)
 }
