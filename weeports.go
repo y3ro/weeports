@@ -191,6 +191,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	setGitlabClient()
 
 	// TODO:
 	// issues := fetchClosedLastWeekIssues()
