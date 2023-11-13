@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -152,6 +153,14 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 	issues, response, err := gitlabClient.Issues.ListIssues(searchOpts)
 	if err != nil || response.Status != "200 OK" {
 		log.Fatal(err)
+	}
+
+	for i := 0; i < len(issues); i++ {	
+		issue := issues[i]
+		if issue.MovedToID != 0 {
+			issue = nil
+			issues = slices.Delete(issues, i, i)
+		}
 	}
 
 	return issues
