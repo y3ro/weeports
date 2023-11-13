@@ -141,7 +141,7 @@ func setGitlabClient() {
 }
 
 func fetchClosedLastWeekIssues() []*gitlab.Issue {
-	lastWeekDay := time.Now().AddDate(0, 0, 7)
+	lastWeekDay := time.Now().AddDate(0, 0, -7)
 	closedState := "closed"
 	searchOpts := &gitlab.ListIssuesOptions{
 		AssigneeUsername: &config.GitlabUsername,
