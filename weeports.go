@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/smtp"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
-	"net/smtp"
 	"strings"
 	"time"
 
@@ -29,18 +29,18 @@ var (
 )
 
 type Config struct {
-	GitlabUrl       string
-	GitlabToken     string
-	GitlabUsername  string
-	SMTPUsername	string
-	SMTPPassword	string
-	SMTPHost	string
-	SMTPPort	string
-	RecipientEmail	string
+	GitlabUrl      string
+	GitlabToken    string
+	GitlabUsername string
+	SMTPUsername   string
+	SMTPPassword   string
+	SMTPHost       string
+	SMTPPort       string
+	RecipientEmail string
 }
 
 func getConfigDir() string {
-	var homePath string	
+	var homePath string
 	if runtime.GOOS == "windows" {
 		homePath = "HOMEPATH"
 	} else {
@@ -172,8 +172,8 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 	closedState := "closed"
 	searchOpts := &gitlab.ListIssuesOptions{
 		AssigneeUsername: &config.GitlabUsername,
-		UpdatedAfter: &lastWeekDay, // TODO: should check for a "deployed" or "completed" tag
-		State: &closedState,
+		UpdatedAfter:     &lastWeekDay, // TODO: should check for a "deployed" or "completed" tag
+		State:            &closedState,
 	}
 
 	issues, response, err := gitlabClient.Issues.ListIssues(searchOpts)
@@ -181,7 +181,7 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 		log.Fatal(err)
 	}
 
-	for i := 0; i < len(issues); i++ {	
+	for i := 0; i < len(issues); i++ {
 		issue := issues[i]
 		if issue.MovedToID != 0 {
 			issue = nil
@@ -196,8 +196,8 @@ func fetchOpenIssuesOnDueDate(dueDate string) []*gitlab.Issue {
 	openedState := "opened"
 	searchOpts := &gitlab.ListIssuesOptions{
 		AssigneeUsername: &config.GitlabUsername,
-		DueDate: &dueDate,
-		State: &openedState,
+		DueDate:          &dueDate,
+		State:            &openedState,
 	}
 	issues, response, err := gitlabClient.Issues.ListIssues(searchOpts)
 	if err != nil || response.Status != "200 OK" {
@@ -211,6 +211,7 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 	var issues []*gitlab.Issue
 	issues = append(issues, fetchOpenIssuesOnDueDate("week")...)
 	issues = append(issues, fetchOpenIssuesOnDueDate("overdue")...)
+	// TODO: remove duplicates
 
 	return issues
 }
@@ -262,7 +263,7 @@ func sendEmail(msgBody string) {
 		"\r\n" + msgBody + "\r\n")
 
 	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, host)
-	err := smtp.SendMail(host + ":" + config.SMTPPort, auth, config.SMTPUsername, to, message)
+	err := smtp.SendMail(host+":"+config.SMTPPort, auth, config.SMTPUsername, to, message)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -273,7 +274,7 @@ func main() {
 	configPathPtr := flag.String("config", "", "Path to the configuration file")
 	flag.Parse()
 
-	err := readConfig(*configPathPtr)
+	err := readConfig(*configPathPtr) // TODO: does not find default filepath, at least on windows
 	if err != nil {
 		log.Fatal(err)
 	}
