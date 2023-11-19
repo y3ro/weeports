@@ -142,7 +142,12 @@ func readConfig(configPath string) error {
 		err = fmt.Errorf("%w\n\nExample configuration:\n\n%s", err, helpMsg)
 		return err
 	}
-	defer configFile.Close()
+	defer func(configFile *os.File) {
+		err := configFile.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(configFile)
 
 	configBytes, err := io.ReadAll(configFile)
 	if err != nil {
