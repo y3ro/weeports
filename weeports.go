@@ -98,13 +98,13 @@ func openDefaultConfigFile() (*os.File, error) {
 
 func checkConfigFields(config *Config) error {
 	if config.GitlabUrl == "" {
-		return errors.New("No GitLab URL specified in the config file")
+		return errors.New("no GitLab URL specified in the config file")
 	}
 	if config.GitlabToken == "" {
-		return errors.New("No GitLab secret token specified in the config file")
+		return errors.New("no GitLab secret token specified in the config file")
 	}
 	if config.GitlabUsername == "" {
-		return errors.New("No GitLab username specified in the config file")
+		return errors.New("no GitLab username specified in the config file")
 	}
 	if config.SMTPUsername == "" {
 		log.Fatalln("No SMTP username specified in the config file")
@@ -146,13 +146,13 @@ func readConfig(configPath string) error {
 
 	configBytes, err := io.ReadAll(configFile)
 	if err != nil {
-		err = fmt.Errorf("Error reading config file in readConfig: %w", err)
+		err = fmt.Errorf("error reading config file in readConfig: %w", err)
 		return err
 	}
 
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
-		err = fmt.Errorf("Error unmarshalling in readConfig: %w", err)
+		err = fmt.Errorf("error unmarshalling in readConfig: %w", err)
 		return err
 	}
 
