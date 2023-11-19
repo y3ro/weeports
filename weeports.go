@@ -262,7 +262,7 @@ func sendEmail(msgBody string) {
 	host := config.SMTPHost
 	toStr := config.RecipientEmail
 	to := []string{toStr}
-	now := time.Now().String()
+	now := time.Now().Format("2006-01-01")
 	message := []byte("To: " + toStr + "\r\n" +
 		"Subject: Weekly report (" + now + ")\r\n" +
 		"\r\n" + msgBody + "\r\n")
