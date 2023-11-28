@@ -244,6 +244,9 @@ func formatIssues(issues []*gitlab.Issue) string {
 
 func formatClosedLastWeekIssues() string {
 	issues := fetchClosedLastWeekIssues()
+	if len(issues) == 0 {
+		return ""
+	}
 	title := "Issues closed last week:\r\n\r\n"
 	body := formatIssues(issues)
 
@@ -252,6 +255,10 @@ func formatClosedLastWeekIssues() string {
 
 func formatToCloseThisWeekIssues() string {
 	issues := fetchToCloseThisWeekIssues()
+	if len(issues) == 0 {
+		return ""
+	}
+
 	title := "Issues to close this week:\r\n\r\n"
 	body := formatIssues(issues)
 
