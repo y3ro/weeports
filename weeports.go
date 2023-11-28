@@ -205,7 +205,7 @@ func fetchOpenIssuesOnDueDate(dueDate string) []*gitlab.Issue {
 		State:            &openedState,
 	}
 	issues, response, err := gitlabClient.Issues.ListIssues(searchOpts)
-	if err != nil || response.Status != "200 OK" {
+	if err != nil || response.StatusCode != 200 {
 		log.Fatal(err)
 	}
 
