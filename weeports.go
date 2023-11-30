@@ -221,20 +221,55 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 	return issues
 }
 
+func fetchProjectNameMap() map[int]string {
+	var membership = true
+	projects, response, err := gitlabClient.Projects.ListProjects(&gitlab.ListProjectsOptions{
+		Membership:        &membership,
+		LastActivityAfter: gitlab.Time(time.Now().AddDate(0, 0, -7)),
+	})
+	if err != nil || response.StatusCode != 200 {
+		log.Fatal(err)
+	}
+
+	projectNameMap := make(map[int]string)
+	for i := 0; i < len(projects); i++ {
+		project := projects[i]
+		projectNameMap[project.ID] = project.Name
+	}
+
+	return projectNameMap
+}
+
+func groupIssuesByProject(issues []*gitlab.Issue) map[int][]*gitlab.Issue {
+	projectIssues := make(map[int][]*gitlab.Issue)
+	for i := 0; i < len(issues); i++ {
+		issue := issues[i]
+		projectIssues[issue.ProjectID] = append(projectIssues[issue.ProjectID], issue)
+	}
+
+	return projectIssues
+}
+
 // TODO: fetch other "doing" issues (specify label in config)
 // TODO: fetch "to do" issues (same)
 
-// TODO: mention if there are MRs
-// TODO: distinguish between projects
+// TODO: mention if there are MRs for open issues
 
-func formatIssues(issues []*gitlab.Issue) string {
+func formatGroupedIssues(groupedIssues map[int][]*gitlab.Issue) string {
 	var issuesStrs []string
-	for i := 0; i < len(issues); i++ {
-		issue := issues[i]
-		issueStr := "* [" + issue.Title + "](" + issue.WebURL + ")\r\n"
-		dueDate := issue.DueDate
-		if dueDate != nil {
-			issueStr += "\t* Due date: " + dueDate.String() + "\r\n"
+	projectNameMap := fetchProjectNameMap()
+	for group, issueGroup := range groupedIssues {
+		if len(issueGroup) == 0 {
+			continue
+		}
+		issueStr := "* " + projectNameMap[group] + ":\r\n"
+		for j := 0; j < len(issueGroup); j++ {
+			issue := issueGroup[j]
+			issueStr += "\t* [" + issue.Title + "](" + issue.WebURL + ")\r\n"
+			dueDate := issue.DueDate
+			if dueDate != nil {
+				issueStr += "\t\t* Due date: " + dueDate.String() + "\r\n"
+			}
 		}
 		issuesStrs = append(issuesStrs, issueStr)
 	}
@@ -247,8 +282,13 @@ func formatClosedLastWeekIssues() string {
 	if len(issues) == 0 {
 		return ""
 	}
+	groupedIssues := groupIssuesByProject(issues)
+	if len(groupedIssues) == 0 {
+		return ""
+	}
+
 	title := "Issues closed last week:\r\n\r\n"
-	body := formatIssues(issues)
+	body := formatGroupedIssues(groupedIssues)
 
 	return title + body + "\r\n"
 }
@@ -258,9 +298,13 @@ func formatToCloseThisWeekIssues() string {
 	if len(issues) == 0 {
 		return ""
 	}
+	groupedIssues := groupIssuesByProject(issues)
+	if len(groupedIssues) == 0 {
+		return ""
+	}
 
 	title := "Issues to close this week:\r\n\r\n"
-	body := formatIssues(issues)
+	body := formatGroupedIssues(groupedIssues)
 
 	return title + body + "\r\n"
 }
