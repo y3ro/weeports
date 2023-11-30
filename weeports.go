@@ -66,32 +66,14 @@ func configFileHelp() string {
 }
 
 func openDefaultConfigFile() (*os.File, error) {
-	var (
-		configPath string
-		configFile *os.File
-		out        []byte
-		err        error
-	)
-
-	// TODO: remove this per-repo default option
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	out, err = cmd.Output()
-	if err == nil {
-		repoRoot := strings.TrimSpace(string(out))
-		configPath = filepath.Join(repoRoot, configFileName)
-		configFile, err = os.Open(configPath)
-	}
-
+	configDir := getConfigDir()
+	err := os.MkdirAll(configDir, os.ModePerm)
 	if err != nil {
-		configDir := getConfigDir()
-		err = os.MkdirAll(configDir, os.ModePerm)
-		if err != nil {
-			log.Fatalf("Error mkdir'ing in readConfig: %s\n", err)
-		}
-
-		configPath = filepath.Join(configDir, configFileName)
-		configFile, err = os.Open(configPath)
+		log.Fatalf("Error mkdir'ing in readConfig: %s\n", err)
 	}
+
+	configPath := filepath.Join(configDir, configFileName)
+	configFile, err := os.Open(configPath)
 
 	return configFile, err
 }
