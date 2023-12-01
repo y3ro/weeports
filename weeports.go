@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -291,6 +292,27 @@ func formatToCloseThisWeekIssues() string {
 	return title + body + "\r\n"
 }
 
+func readAndFormatMainDifficulties() string {
+	inputReader := bufio.NewReader(os.Stdin)
+	fmt.Println("Main difficulties:")
+	difficulties := ""
+	for {
+		difficulty, err := inputReader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(strings.TrimSpace(difficulty)) == 0 {
+			break
+		}
+		difficulties += "\t* " + difficulty
+	}
+	if len(strings.TrimSpace(difficulties)) == 0 {
+		return ""
+	}
+
+	return "Main difficulties:\r\n" + difficulties + "\r\n"
+}
+
 func sendEmail(msgBody string) {
 	host := config.SMTPHost
 	toStr := config.RecipientEmail
@@ -320,5 +342,6 @@ func main() {
 
 	closedLastWeekIssuesStr := formatClosedLastWeekIssues()
 	toCloseWeekIssuesStr := formatToCloseThisWeekIssues()
-	sendEmail(closedLastWeekIssuesStr + toCloseWeekIssuesStr)
+	mainDifficulties := readAndFormatMainDifficulties()
+	sendEmail(closedLastWeekIssuesStr + toCloseWeekIssuesStr + mainDifficulties)
 }
