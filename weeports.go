@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -236,7 +237,41 @@ func groupIssuesByProject(issues []*gitlab.Issue) map[int][]*gitlab.Issue {
 // TODO: fetch other "doing" issues (specify label in config)
 // TODO: fetch "to do" issues (same)
 
-// TODO: mention if there are MRs for open issues
+func slugify(inputString string) string {
+	// Compile the regular expression to match non-alphanumeric characters
+	regex := regexp.MustCompile("[^a-zA-Z0-9]")
+
+	// Use the regular expression to replace non-alphanumeric characters with an empty string
+	cleanedString := regex.ReplaceAllString(inputString, "")
+
+	return strings.ToLower(cleanedString)
+}
+
+func fetchIssueLastMergeRequest(issue *gitlab.Issue) *gitlab.MergeRequest {
+	listMergeRequestOptions := &gitlab.ListMergeRequestsOptions{
+		AuthorID: &issue.Assignee.ID,
+		State:    gitlab.String("opened"), // TODO: use in other cases
+	}
+	mergeRequests, response, err := gitlabClient.MergeRequests.ListMergeRequests(listMergeRequestOptions)
+	if err != nil || response.StatusCode != 200 {
+		log.Fatal(err)
+	}
+
+	issueTitleCleaned := slugify(issue.Title)
+	for i := 0; i < len(mergeRequests); i++ {
+		mergeRequest := mergeRequests[i]
+		sourceBranchCleaned := slugify(mergeRequest.SourceBranch)
+		if sourceBranchCleaned != issueTitleCleaned {
+			mergeRequest = nil
+			mergeRequests = slices.Delete(mergeRequests, i, i+1)
+		}
+	}
+
+	if len(mergeRequests) == 0 {
+		return nil
+	}
+	return mergeRequests[len(mergeRequests)-1]
+}
 
 func formatGroupedIssues(groupedIssues map[int][]*gitlab.Issue) string {
 	var issuesStrs []string
@@ -252,6 +287,10 @@ func formatGroupedIssues(groupedIssues map[int][]*gitlab.Issue) string {
 			dueDate := issue.DueDate
 			if dueDate != nil {
 				issueStr += "\t\t* Due date: " + dueDate.String() + "\r\n"
+			}
+			mergeRequest := fetchIssueLastMergeRequest(issue)
+			if mergeRequest != nil {
+				issueStr += "\t\t* Merge request: [" + mergeRequest.Title + "](" + mergeRequest.WebURL + ")\r\n"
 			}
 		}
 		issuesStrs = append(issuesStrs, issueStr)
