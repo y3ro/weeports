@@ -160,6 +160,7 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 	lastWeekDay := time.Now().AddDate(0, 0, -7)
 	closedState := "closed"
 	searchOpts := &gitlab.ListIssuesOptions{
+		Scope:            gitlab.String("assigned_to_me"),
 		AssigneeUsername: &config.GitlabUsername,
 		UpdatedAfter:     &lastWeekDay, // TODO: should check for a "deployed" or "completed" tag
 		State:            &closedState,
@@ -184,6 +185,7 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 func fetchOpenIssuesOnDueDate(dueDate string) []*gitlab.Issue {
 	openedState := "opened"
 	searchOpts := &gitlab.ListIssuesOptions{
+		Scope:            gitlab.String("assigned_to_me"),
 		AssigneeUsername: &config.GitlabUsername,
 		DueDate:          &dueDate,
 		State:            &openedState,
