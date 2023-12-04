@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/smtp"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
