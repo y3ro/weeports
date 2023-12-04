@@ -157,7 +157,8 @@ func setGitlabClient() {
 }
 
 func fetchClosedLastWeekIssues() []*gitlab.Issue {
-	lastWeekDay := time.Now().AddDate(0, 0, -7)
+	nowTime := time.Now()
+	lastWeekDay := nowTime.AddDate(0, 0, -7)
 	closedState := "closed"
 	searchOpts := &gitlab.ListIssuesOptions{
 		Scope:            gitlab.String("assigned_to_me"),
@@ -209,9 +210,10 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 
 func fetchProjectNameMap() map[int]string {
 	var membership = true
+	nowTime := time.Now()
 	projects, response, err := gitlabClient.Projects.ListProjects(&gitlab.ListProjectsOptions{
 		Membership:        &membership,
-		LastActivityAfter: gitlab.Time(time.Now().AddDate(0, 0, -7)),
+		LastActivityAfter: gitlab.Time(nowTime.AddDate(0, 0, -7)),
 	})
 	if err != nil || response.StatusCode != 200 {
 		log.Fatal(err)
@@ -358,9 +360,10 @@ func sendEmail(msgBody string) {
 	host := config.SMTPHost
 	toStr := config.RecipientEmail
 	to := []string{toStr}
-	now := time.Now().Format("2006-01-01")
+	nowTime := time.Now()
+	nowString := nowTime.Format("2006-01-02")
 	message := []byte("To: " + toStr + "\r\n" +
-		"Subject: Weekly report (" + now + ")\r\n" +
+		"Subject: Weekly report (" + nowString + ")\r\n" +
 		"\r\n" + msgBody + "\r\n")
 
 	auth := smtp.PlainAuth("", config.SMTPUsername, config.SMTPPassword, host)
