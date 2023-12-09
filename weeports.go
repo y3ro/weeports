@@ -176,7 +176,7 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 		issue := issues[i]
 		if issue.MovedToID != 0 {
 			issue = nil
-			issues = slices.Delete(issues, i, i)
+			issues = slices.Delete(issues, i, i+1)
 		}
 	}
 
@@ -378,7 +378,7 @@ func main() {
 	configPathPtr := flag.String("config", "", "Path to the configuration file")
 	flag.Parse()
 
-	err := readConfig(*configPathPtr) // TODO: does not find default filepath, at least on windows
+	err := readConfig(*configPathPtr)
 	if err != nil {
 		log.Fatal(err)
 	}
