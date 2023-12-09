@@ -43,12 +43,13 @@ type Config struct {
 func getConfigDir() string {
 	var homePath string
 	if runtime.GOOS == "windows" {
-		homePath = "HOMEPATH"
+		homeDrive := os.Getenv("HOMEDRIVE")
+		homePath = homeDrive + os.Getenv("HOMEPATH")
 	} else {
-		homePath = "HOME"
+		homePath = os.Getenv("HOME")
 	}
 
-	return filepath.Join(os.Getenv(homePath), ".config")
+	return filepath.Join(homePath, ".config")
 }
 
 func configFileHelp() string {
