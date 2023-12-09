@@ -1,6 +1,6 @@
 module github.com/y3ro/weeports
 
-go 1.21.1
+go 1.21
 
 require github.com/xanzy/go-gitlab v0.93.2
 
