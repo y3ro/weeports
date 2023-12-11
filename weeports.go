@@ -158,13 +158,11 @@ func setGitlabClient() {
 
 func fetchClosedLastWeekIssues() []*gitlab.Issue {
 	nowTime := time.Now()
-	lastWeekDay := nowTime.AddDate(0, 0, -7)
-	closedState := "closed"
 	searchOpts := &gitlab.ListIssuesOptions{
 		Scope:            gitlab.String("assigned_to_me"),
 		AssigneeUsername: &config.GitlabUsername,
-		UpdatedAfter:     &lastWeekDay, // TODO: should check for a "deployed" or "completed" tag
-		State:            &closedState,
+		UpdatedAfter:     gitlab.Time(nowTime.AddDate(0, 0, -7)),
+		State:            gitlab.String("closed"),
 	}
 
 	issues, response, err := gitlabClient.Issues.ListIssues(searchOpts)
@@ -184,12 +182,11 @@ func fetchClosedLastWeekIssues() []*gitlab.Issue {
 }
 
 func fetchOpenIssuesOnDueDate(dueDate string) []*gitlab.Issue {
-	openedState := "opened"
 	searchOpts := &gitlab.ListIssuesOptions{
 		Scope:            gitlab.String("assigned_to_me"),
 		AssigneeUsername: &config.GitlabUsername,
 		DueDate:          &dueDate,
-		State:            &openedState,
+		State:            gitlab.String("opened"),
 	}
 	issues, response, err := gitlabClient.Issues.ListIssues(searchOpts)
 	if err != nil || response.StatusCode != 200 {
@@ -209,10 +206,9 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 }
 
 func fetchProjectNameMap() map[int]string {
-	var membership = true
 	nowTime := time.Now()
 	projects, response, err := gitlabClient.Projects.ListProjects(&gitlab.ListProjectsOptions{
-		Membership:        &membership,
+		Membership:        gitlab.Bool(true),
 		LastActivityAfter: gitlab.Time(nowTime.AddDate(0, 0, -7)),
 	})
 	if err != nil || response.StatusCode != 200 {
@@ -254,7 +250,7 @@ func slugify(inputString string) string {
 func fetchIssueLastMergeRequest(issue *gitlab.Issue) *gitlab.MergeRequest {
 	listMergeRequestOptions := &gitlab.ListMergeRequestsOptions{
 		AuthorID: &issue.Assignee.ID,
-		State:    gitlab.String("opened"), // TODO: use in other cases
+		State:    gitlab.String("opened"),
 	}
 	mergeRequests, response, err := gitlabClient.MergeRequests.ListMergeRequests(listMergeRequestOptions)
 	if err != nil || response.StatusCode != 200 {
