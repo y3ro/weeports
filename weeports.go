@@ -200,7 +200,6 @@ func fetchToCloseThisWeekIssues() []*gitlab.Issue {
 	var issues []*gitlab.Issue
 	issues = append(issues, fetchOpenIssuesOnDueDate("week")...)
 	issues = append(issues, fetchOpenIssuesOnDueDate("overdue")...)
-	// TODO: remove duplicates
 
 	return issues
 }
@@ -233,9 +232,6 @@ func groupIssuesByProject(issues []*gitlab.Issue) map[int][]*gitlab.Issue {
 
 	return projectIssues
 }
-
-// TODO: fetch other "doing" issues (specify label in config)
-// TODO: fetch "to do" issues (same)
 
 func slugify(inputString string) string {
 	// Compile the regular expression to match non-alphanumeric characters
