@@ -57,10 +57,11 @@ func configFileHelp() string {
 		GitlabUrl:      "https://git.domain.com",
 		GitlabToken:    "gitlab-secret-token",
 		GitlabUsername: "gitlab-username",
-		SMTPUsername:   "email-username",
+		SMTPUsername:   "user@domain.com",
 		SMTPPassword:   "email-password",
 		SMTPHost:       "smtp.domain.com",
-		SMTPPort:       "584",
+		SMTPPort:       "587",
+		RecipientEmail: "manager@domain.com",
 	}
 
 	helpBytes, _ := json.MarshalIndent(helpConfig, "", "    ")

@@ -17,11 +17,11 @@ Example contents:
 
 ```
 {
-  "GitlabUrl":      "https://gitlab.domain.com",
-  "GitlabToken":    "<token>",
-  "GitlabUsername": "username",
+  "GitlabUrl":      "https://git.domain.com",
+  "GitlabToken":    "gitlab-secret-token",
+  "GitlabUsername": "gitlab-username",
   "SMTPUsername":   "user@domain.com",
-  "SMTPPassword":   "<passwd>",
+  "SMTPPassword":   "email-password",
   "SMTPHost":       "smtp.domain.com",
   "SMTPPort":       "587",
   "RecipientEmail": "manager@domain.com"
