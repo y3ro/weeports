@@ -34,6 +34,12 @@ Then, just run:
 weeports <option>
 ```
 
+I personally have a `crontab` entry to run this app every Monday at 7am:
+
+```
+0 7 * * 1 weeports
+```
+
 Avaliable options:
 
 * `-config <filepath>`: Specifies the path to the configuration file. If not specified, the default configuration file is in `$HOME/.config/weeports.json`. 
