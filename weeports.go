@@ -278,17 +278,17 @@ func formatGroupedIssues(groupedIssues map[int][]*gitlab.Issue) string {
 		if len(issueGroup) == 0 {
 			continue
 		}
-		issueStr := "* " + projectNameMap[group] + ":\r\n"
+		issueStr := "#### " + projectNameMap[group] + ":\r\n"
 		for j := 0; j < len(issueGroup); j++ {
 			issue := issueGroup[j]
-			issueStr += "\t* [" + issue.Title + "](" + issue.WebURL + ")\r\n"
+			issueStr += "  * [" + issue.Title + "](" + issue.WebURL + ")\r\n"
 			dueDate := issue.DueDate
 			if dueDate != nil {
-				issueStr += "\t\t* Due date: " + dueDate.String() + "\r\n"
+				issueStr += "    * Due date: " + dueDate.String() + "\r\n"
 			}
 			mergeRequest := fetchIssueLastMergeRequest(issue)
 			if mergeRequest != nil {
-				issueStr += "\t\t* Merge request: [" + mergeRequest.Title + "](" + mergeRequest.WebURL + ")\r\n"
+				issueStr += "    * Merge request: [" + mergeRequest.Title + "](" + mergeRequest.WebURL + ")\r\n"
 			}
 		}
 		issuesStrs = append(issuesStrs, issueStr)
@@ -311,7 +311,7 @@ func formatClosedLastWeeksIssues(weeks int) string {
 	if weeks > 1 {
 		weeksStr = fmt.Sprintf("in the last %d weeks", weeks)
 	}
-	title := "Issues closed " + weeksStr + ":\r\n\r\n"
+	title := "### Issues closed " + weeksStr + ":\r\n\r\n"
 	body := formatGroupedIssues(groupedIssues)
 
 	return title + body + "\r\n"
@@ -327,7 +327,7 @@ func formatToCloseThisWeekIssues() string {
 		return ""
 	}
 
-	title := "Issues to close this week:\r\n\r\n"
+	title := "### Issues to close this week:\r\n\r\n"
 	body := formatGroupedIssues(groupedIssues)
 
 	return title + body + "\r\n"
@@ -335,7 +335,8 @@ func formatToCloseThisWeekIssues() string {
 
 func readAndFormatMainDifficulties() string {
 	inputReader := bufio.NewReader(os.Stdin)
-	fmt.Println("Main difficulties:")
+	mainDifficultiesStr := "### Main difficulties:"
+	fmt.Println(mainDifficultiesStr)
 	difficulties := ""
 	for {
 		difficulty, err := inputReader.ReadString('\n')
@@ -345,13 +346,13 @@ func readAndFormatMainDifficulties() string {
 		if len(strings.TrimSpace(difficulty)) == 0 {
 			break
 		}
-		difficulties += "\t* " + difficulty
+		difficulties += "  * " + difficulty
 	}
 	if len(strings.TrimSpace(difficulties)) == 0 {
 		return ""
 	}
 
-	return "Main difficulties:\r\n" + difficulties + "\r\n"
+	return mainDifficultiesStr + "\r\n" + difficulties + "\r\n"
 }
 
 func sendEmail(msgBody string) {
