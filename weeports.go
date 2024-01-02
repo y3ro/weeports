@@ -157,12 +157,13 @@ func setGitlabClient() {
 	}
 }
 
-func fetchClosedLastWeekIssues() []*gitlab.Issue {
+func fetchClosedLastWeeksIssues(weeks int) []*gitlab.Issue {
 	nowTime := time.Now()
+	days := weeks * -7
 	searchOpts := &gitlab.ListIssuesOptions{
 		Scope:            gitlab.String("assigned_to_me"),
 		AssigneeUsername: &config.GitlabUsername,
-		UpdatedAfter:     gitlab.Time(nowTime.AddDate(0, 0, -7)),
+		UpdatedAfter:     gitlab.Time(nowTime.AddDate(0, 0, days)),
 		State:            gitlab.String("closed"),
 	}
 
@@ -296,8 +297,8 @@ func formatGroupedIssues(groupedIssues map[int][]*gitlab.Issue) string {
 	return strings.Join(issuesStrs, "")
 }
 
-func formatClosedLastWeekIssues() string {
-	issues := fetchClosedLastWeekIssues()
+func formatClosedLastWeeksIssues(weeks int) string {
+	issues := fetchClosedLastWeeksIssues(weeks)
 	if len(issues) == 0 {
 		return ""
 	}
@@ -306,7 +307,11 @@ func formatClosedLastWeekIssues() string {
 		return ""
 	}
 
-	title := "Issues closed last week:\r\n\r\n"
+	weeksStr := "last week"
+	if weeks > 1 {
+		weeksStr = fmt.Sprintf("in the last %d weeks", weeks)
+	}
+	title := "Issues closed " + weeksStr + ":\r\n\r\n"
 	body := formatGroupedIssues(groupedIssues)
 
 	return title + body + "\r\n"
@@ -369,6 +374,7 @@ func sendEmail(msgBody string) {
 
 func main() {
 	configPathPtr := flag.String("config", "", "Path to the configuration file")
+	weeksPtr := flag.Int("weeks", 1, "Number of weeks to report")
 	flag.Parse()
 
 	err := readConfig(*configPathPtr)
@@ -377,8 +383,8 @@ func main() {
 	}
 	setGitlabClient()
 
-	closedLastWeekIssuesStr := formatClosedLastWeekIssues()
+	closedLastWeeksIssuesStr := formatClosedLastWeeksIssues(*weeksPtr)
 	toCloseWeekIssuesStr := formatToCloseThisWeekIssues()
 	mainDifficulties := readAndFormatMainDifficulties()
-	sendEmail(closedLastWeekIssuesStr + toCloseWeekIssuesStr + mainDifficulties)
+	sendEmail(closedLastWeeksIssuesStr + toCloseWeekIssuesStr + mainDifficulties)
 }
